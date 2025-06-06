@@ -1,5 +1,7 @@
-# langgraph-on-azure
-Experiments with AzureOpenAI and LangGraph
+# ai-prod-support-assistant
+An AI assistant codebase leveraging AzureOpenAI and LangGraph
+
+This assistant will aid support staff and developers in production support scenarios.
 
 Before running ensure you have the following env variables set.
 

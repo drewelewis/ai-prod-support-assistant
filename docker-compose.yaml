@@ -2,118 +2,26 @@ services:
 
   postgres:
     image: postgres:17.5
-    container_name: langgraph_postgres
+    container_name: prod_support_postgres
     ports:
-      - "5432:5432"
+      - "5000:5432"
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       PGDATA: /var/lib/postgresql/data/pgdata
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
   adminer:
     image: adminer
-    container_name: langgraph_adminer
+    container_name: prod_support_adminer
     restart: always
     ports:
-      - 8080:8080
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
-    container_name: langgraph_elasticsearch
-    ports:
-      - "9200:9200"
-    environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
-      - xpack.security.enabled=false
-      - xpack.security.authc.api_key.enabled=false
-      - xpack.security.http.ssl.enabled=false
-      - xpack.security.transport.ssl.enabled=false
-      - xpack.monitoring.collection.enabled=true
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.15.0
-    container_name: langgraph_kibana
-    ports:
-      - "5601:5601"
-    depends_on:
-      - elasticsearch
-  teamcity:
-    image: jetbrains/teamcity-server:latest
-    container_name: langgraph_teamcity
-    ports:
-      - "8111:8111"
-    environment:
-      TEAMCITY_SERVER_MEM_OPTS: "-Xmx2g -XX:ReservedCodeCacheSize=512m"
-    volumes:
-      - teamcity_data:/data/teamcity_server/datadir
-      - teamcity_logs:/opt/teamcity/logs
-    networks:
-      - teamcity_network
-  teamcity-agent1:
-    image: jetbrains/teamcity-agent:latest
-    container_name: langgraph_teamcity_agent_1
-    environment:
-      - SERVER_URL=http://teamcity:8111
-      - AGENT_NAME=langgraph_agent
-    depends_on:
-      - teamcity
-    networks:
-      - teamcity_network
-
-  teamcity-agent2:
-    image: jetbrains/teamcity-agent:latest
-    container_name: langgraph_teamcity_agent_2
-    environment:
-      - SERVER_URL=http://teamcity:8111
-      - AGENT_NAME=langgraph_agent
-    depends_on:
-      - teamcity
-    networks:
-      - teamcity_network
+      - 8888:8080
 
 
-
-  # tekton:
-  # You need to have Openshift local installed to run this service successfully.
-  # https://zxtech.wordpress.com/2024/05/12/configuring-openshift-local/
-  # KUBERNETES_MASTER=https://api.crc.testing:6443
-    
-  udeploy-server:
-    image: mkorejo/ucd-server
-    container_name: langgraph_udeploy
-    ports:
-      - "8443:8443"
-      - "7919:7919"
-    environment:
-      - DEPLOY_SERVER_HOSTNAME=your-ucd-hostname-or-ip
-      - DB_HOST=mysql
-      - DB_NAME=ibm_ucd
-      - DB_USER=ibm_ucd
-      - DB_PASSWORD=your-mysql-password
-      - ADMIN_PASSWORD=your-ucd-admin-password  # Optional
-    depends_on:
-      - mysql
-  mysql:
-    image: mysql:5.6
-    ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=your-mysql-root-password
-      - MYSQL_DATABASE=ibm_ucd
-      - MYSQL_USER=ibm_ucd
-      - MYSQL_PASSWORD=your-mysql-password
-
+  
 volumes:
   postgres_data:
-  elasticsearch_data:
-  teamcity_data:
-  teamcity_logs:
-  tekton_data:
 
-networks:
-  teamcity_network:
+

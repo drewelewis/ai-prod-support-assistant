@@ -7,7 +7,7 @@ from github import Auth
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-pat=os.getenv('Github_PAT')
+pat=os.getenv('GITHUB_PAT')
 
 if not pat:
     raise ValueError("Github Personal Access Token (PAT) is not set in environment variables.")

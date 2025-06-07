@@ -15,11 +15,9 @@ from langchain_core.utils.function_calling import format_tool_to_openai_function
 
 from langchain_openai import AzureChatOpenAI
 from IPython.display import Image, display
-from langchain_community.tools.tavily_search import TavilySearchResults
 
 from utils.graph_utils import save_graph
 from dotenv import load_dotenv
-
 
 from tools.github_tools import GithubTools
 from tools.elastic_search_tools import ElasticsearchTools
@@ -43,7 +41,6 @@ You can search for code in a GitHub repository.
 You can get a list of repositories from a GitHub user account autonomously.
 You can get a list of files in a GitHub repository autonomously.
 You can get the content of a file in a GitHub repository autonomously.
-You can use the calculator to perform calculations.
 When possible, use your tools to answer the user's questions.
 If there is no tool available or you are unsure of which tool to use, ask for clarifying questions.
 Here are some default values for the tools you can use:

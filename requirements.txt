@@ -19,12 +19,8 @@ langchain-openai==0.3.16
 
 
 ipython
-tavily-python 
 langchain_community
 
-langchain-mcp-adapters
 asyncio
 PyGithub
 elasticsearch
-openshift
-dohq-teamcity

@@ -9,6 +9,7 @@ elasticsearch_index=os.getenv('ELASTICSEARCH_INDEX')
 
 def main():
     results = []
+    # elastic python client query only supports the "query" parameter
     query={
             "match": {
                 "levelname": "Error"

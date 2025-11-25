@@ -13,14 +13,13 @@ pytest-asyncio
 alembic
 
 faker
-langchain==0.3.25
-langgraph==0.4.3
-langchain-openai==0.3.16
 
+# Semantic Kernel for AI orchestration
+semantic-kernel>=1.0.0
 
 ipython
-langchain_community
 
 asyncio
 PyGithub
 elasticsearch
+python-dotenv

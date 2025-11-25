@@ -1,6 +1,6 @@
 # AI Production Support Assistant
 
-A sophisticated AI-powered assistant built with Azure OpenAI and LangGraph to streamline production support workflows for development teams. This intelligent agent combines conversational AI with powerful integrations to GitHub and Elasticsearch, enabling support staff and developers to quickly diagnose issues, search code repositories, and analyze application logs.
+A sophisticated AI-powered assistant built with Azure OpenAI and available in two implementations: **Semantic Kernel** (recommended) and **LangGraph** (legacy). This intelligent agent streamlines production support workflows by combining conversational AI with powerful integrations to GitHub, Elasticsearch, and ServiceNow, enabling support staff and developers to quickly diagnose issues, search code repositories, analyze application logs, and manage support cases.
 
 ## 🎯 Overview
 
@@ -8,57 +8,90 @@ The AI Production Support Assistant serves as a conversational interface that ca
 - Search and analyze application logs stored in Elasticsearch
 - Browse GitHub repositories and examine source code
 - Create GitHub issues for tracking problems
+- Manage ServiceNow support cases
 - Provide intelligent assistance for production support scenarios
 - Maintain conversation context and memory across interactions
 
+## 🆕 Two Implementation Options
+
+### 1. **Semantic Kernel (Recommended) - NEW!** ✨
+
+The modern implementation using Microsoft's Semantic Kernel framework.
+
+**Benefits:**
+- Simpler, more maintainable code
+- Native Azure OpenAI integration
+- Built-in async support
+- Automatic function calling
+- Easier plugin development
+
+**Run with:**
+```bash
+python chat_sk.py
+```
+
+**Learn more:** See [SEMANTIC_KERNEL_MIGRATION.md](SEMANTIC_KERNEL_MIGRATION.md)
+
+### 2. **LangGraph (Legacy)**
+
+The original implementation using LangGraph's state management system.
+
+**Run with:**
+```bash
+python chat.py
+```
+
 ## 🏗️ Architecture
 
-### Core Components
+### Semantic Kernel Architecture (Recommended)
 
-The solution follows a modular, agent-based architecture built on LangGraph's state management system:
+The solution follows a plugin-based architecture built on Semantic Kernel:
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Chat Layer    │    │  LangGraph      │    │  Tool Layer     │
-│   (chat.py)     │◄──►│  State Graph    │◄──►│  GitHub Tools   │
-│                 │    │                 │    │  Elastic Tools  │
+│   Chat Layer    │    │  Semantic       │    │  Plugin Layer   │
+│  (chat_sk.py)   │◄──►│  Kernel         │◄──►│  GitHub Plugin  │
+│                 │    │                 │    │  Elastic Plugin │
+│                 │    │                 │    │  ServiceNow     │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
          ▼                       ▼                       ▼
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│ Azure OpenAI    │    │ Memory Saver    │    │  Operations     │
-│ Integration     │    │ (Persistence)   │    │  Layer          │
+│ Azure OpenAI    │    │  Chat History   │    │  Operations     │
+│ Integration     │    │  Management     │    │  Layer          │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 ### Key Architectural Patterns
 
-**1. State Graph Architecture (LangGraph)**
-- Implements a conversational state graph with memory persistence
-- Supports tool routing and conditional execution
-- Maintains conversation context across multiple interactions
+**1. Plugin-Based Architecture (Semantic Kernel)**
+- Modular plugin system using `@kernel_function` decorators
+- Automatic function calling with FunctionChoiceBehavior
+- Native async/await support throughout
+- Simple, declarative function definitions
 
-**2. Tool-Based Agent Pattern**
-- Modular tool system with dedicated GitHub and Elasticsearch integrations
-- Each tool is self-contained with validation and error handling
-- Dynamic tool selection based on user queries
-
-**3. Operations Layer Abstraction**
-- Clean separation between tool interfaces and business logic
-- Reusable operations classes for GitHub and Elasticsearch interactions
+**2. Operations Layer Abstraction**
+- Clean separation between plugin interfaces and business logic
+- Reusable operations classes for GitHub, Elasticsearch, and ServiceNow
 - Centralized error handling and connection management
+
+**3. Conversation Management**
+- Built-in ChatHistory for context persistence
+- System message configuration for behavior control
+- Automatic tool invocation without manual routing
 
 ## 🔧 Technical Stack
 
 ### Core Technologies
-- **LangGraph**: State graph framework for building conversational AI agents
-- **LangChain**: Tool integration and prompt management
+- **Semantic Kernel**: Microsoft's AI orchestration framework (recommended)
+- **LangGraph**: State graph framework (legacy implementation)
 - **Azure OpenAI**: Large language model for natural language processing
-- **Python 3.12**: Primary development language
+- **Python 3.12+**: Primary development language
 
 ### Integrations
 - **GitHub API**: Repository browsing, file content access, issue creation
 - **Elasticsearch**: Log search and analysis with KQL support
+- **ServiceNow**: Case management and support ticket operations
 - **PyGithub**: Python wrapper for GitHub API operations
 - **Elasticsearch-py**: Official Elasticsearch Python client
 
@@ -120,24 +153,35 @@ Advanced log analysis capabilities with structured querying:
 
 ```
 ai-prod-support-assistant/
-├── chat.py                     # Main application entry point and LangGraph configuration
+├── chat_sk.py                  # Semantic Kernel chat implementation (NEW - RECOMMENDED)
+├── chat.py                     # LangGraph chat implementation (LEGACY)
 ├── messages.py                 # Message handling utilities
 ├── requirements.txt            # Python dependencies
 ├── docker-compose.yaml         # Infrastructure setup (PostgreSQL, Adminer)
 ├── env.sample                  # Environment variable template
-├── tools/                      # Tool implementations
+├── plugins/                    # Semantic Kernel plugins (NEW)
+│   ├── __init__.py             # Plugin exports
+│   ├── github_plugin.py        # GitHub operations plugin
+│   ├── elasticsearch_plugin.py # Elasticsearch search plugin
+│   └── servicenow_plugin.py    # ServiceNow case management plugin
+├── tools/                      # LangChain tool implementations (LEGACY)
 │   ├── github_tools.py         # GitHub API tool wrappers
-│   └── elastic_search_tools.py # Elasticsearch tool wrappers
-├── operations/                 # Business logic layer
+│   ├── elastic_search_tools.py # Elasticsearch tool wrappers
+│   └── servicenow_tools.py     # ServiceNow tool wrappers
+├── operations/                 # Business logic layer (SHARED)
 │   ├── github_operations.py    # GitHub API operations
-│   └── elastic_search_operations.py # Elasticsearch operations
+│   ├── elastic_search_operations.py # Elasticsearch operations
+│   └── servicenow_operations.py # ServiceNow operations
 ├── utils/                      # Utility functions
 │   └── graph_utils.py          # Graph visualization utilities
 ├── tests/                      # Test suite
 │   ├── test_github.py          # GitHub integration tests
-│   └── test_elastic.py         # Elasticsearch integration tests
+│   ├── test_elastic.py         # Elasticsearch integration tests
+│   └── test_servicenow.py      # ServiceNow integration tests
 ├── images/                     # Generated graph visualizations
 ├── output/                     # Output files and reports
+├── SEMANTIC_KERNEL_MIGRATION.md # Migration guide
+├── SERVICENOW_INTEGRATION.md   # ServiceNow integration documentation
 └── *.bat                       # Windows batch files for environment management
 ```
 
@@ -161,6 +205,13 @@ GITHUB_PAT=ghp_your-github-personal-access-token
 # Elasticsearch Configuration  
 ELASTICSEARCH_URL=https://your-elasticsearch-url:9200
 ELASTICSEARCH_INDEX=your-log-index-name
+
+# ServiceNow Configuration (Optional)
+SERVICENOW_INSTANCE=your-instance.service-now.com
+SERVICENOW_USERNAME=your_username
+SERVICENOW_PASSWORD=your_password
+# OR use API token instead
+SERVICENOW_API_TOKEN=your_api_token
 ```
 
 ### GitHub PAT Permissions
@@ -169,6 +220,11 @@ Your GitHub Personal Access Token should have the following permissions:
 - `public_repo` (for public repository access)
 - `read:user` (for user information)
 
+### ServiceNow Authentication
+Choose one of two authentication methods:
+- **Username/Password:** Set `SERVICENOW_USERNAME` and `SERVICENOW_PASSWORD`
+- **API Token (Recommended):** Set `SERVICENOW_API_TOKEN`
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -176,6 +232,7 @@ Your GitHub Personal Access Token should have the following permissions:
 - Access to Azure OpenAI service
 - GitHub Personal Access Token
 - Elasticsearch cluster (optional, for log analysis)
+- ServiceNow instance (optional, for case management)
 - Docker and Docker Compose (for local development)
 
 ### Installation
@@ -215,6 +272,13 @@ Your GitHub Personal Access Token should have the following permissions:
    ```
 
 5. **Run the assistant:**
+   
+   **Option A: Semantic Kernel (Recommended)**
+   ```bash
+   python chat_sk.py
+   ```
+   
+   **Option B: LangGraph (Legacy)**
    ```bash
    python chat.py
    ```
@@ -247,6 +311,26 @@ Assistant: [Returns specific error logs from the specified host]
 ```
 User: Create an issue in drewelewis/ContosoBankAPI titled "Database connection timeout" with details about the recent connection issues
 Assistant: [Creates GitHub issue and returns the issue URL]
+```
+
+### ServiceNow Case Management
+```
+User: Create a ServiceNow case for the database timeout issue we've been seeing
+Assistant: Case created successfully!
+Case Number: CS0001234
+Sys ID: abc123def456
+Priority: 3
+
+User: Show me all open high priority cases
+Assistant: Found 5 high priority case(s):
+- Case CS0001234: Database connection timeout
+  Priority: 1, State: Open
+- Case CS0001235: API rate limiting errors
+  Priority: 2, State: Open
+...
+
+User: Add a comment to case CS0001234 that we've identified the root cause
+Assistant: Comment added successfully to case.
 ```
 
 ## 🔍 Advanced Features

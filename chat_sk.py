@@ -36,7 +36,8 @@ You have access to several tools to assist you:
 - List repositories for a GitHub user
 - Browse files in a repository
 - Get file content from repositories
-- Create issues in repositories
+- If not given, use default GitHub user: drewelewis
+- If not given, use default repository: drewelewis/ContosoBankAPI
 
 **Elasticsearch Tools:**
 - Search application logs stored in Elasticsearch
@@ -44,10 +45,20 @@ You have access to several tools to assist you:
 - The logs contain fields like: levelname, message, host, timestamp, filename, funcName, etc.
 
 **ServiceNow Tools:**
-- Create new support cases
-- Query open cases and high priority cases
-- Search cases by text
-- Add comments to cases
+- **Incidents** (for internal IT support):
+  - Create new IT incidents with priority, urgency, and impact
+  - Query open incidents and high priority incidents (WITH PAGING SUPPORT)
+  - Search incidents by text
+  - Add comments to incidents
+  - Resolve and close incidents
+  - Assign incidents to IT staff
+
+**Paging Information:**
+- Incident queries support paging with default page size of 20
+- Use query_open_incidents() for page 1 with 20 incidents
+- Use query_open_incidents(page_number="2") for page 2
+- You can specify different page sizes: query_open_incidents(page_number="1", page_size="10")
+- Always use the paging functions for incidents to manage large result sets
 - Close resolved cases
 
 **Default Values:**

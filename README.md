@@ -47,19 +47,92 @@ python chat.py
 
 The solution follows a plugin-based architecture built on Semantic Kernel:
 
+```mermaid
+graph TB
+    subgraph "User Interface Layer"
+        UI[🖥️ Chat Interface<br/>chat_sk.py]
+    end
+    
+    subgraph "AI Orchestration Layer"
+        SK[🧠 Semantic Kernel<br/>Framework]
+        CH[💭 Chat History<br/>Management]
+        AOI[🤖 Azure OpenAI<br/>GPT-4 Integration]
+    end
+    
+    subgraph "Plugin Layer"
+        GP[🐙 GitHub Plugin<br/>@kernel_function]
+        EP[🔍 Elasticsearch Plugin<br/>@kernel_function]
+        SP[🎫 ServiceNow Plugin<br/>@kernel_function]
+    end
+    
+    subgraph "Operations Layer"
+        GO[📂 GitHub Operations<br/>Repository Management]
+        EO[📊 Elasticsearch Operations<br/>Log Analysis]
+        SO[🔧 ServiceNow Operations<br/>Incident Management]
+    end
+    
+    subgraph "External Systems"
+        GH[🌐 GitHub API<br/>REST v4]
+        ES[⚡ Elasticsearch<br/>Search Engine]
+        SN[🏢 ServiceNow<br/>Table API]
+    end
+    
+    %% User Interface Flow
+    UI --> SK
+    SK --> CH
+    SK --> AOI
+    
+    %% Plugin Registration
+    SK --> GP
+    SK --> EP
+    SK --> SP
+    
+    %% Plugin to Operations Flow
+    GP --> GO
+    EP --> EO
+    SP --> SO
+    
+    %% Operations to External Systems
+    GO --> GH
+    EO --> ES
+    SO --> SN
+    
+    %% Data Flow Styling
+    classDef userLayer fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef aiLayer fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef pluginLayer fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef opsLayer fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef extLayer fill:#ffebee,stroke:#b71c1c,stroke-width:2px
+    
+    class UI userLayer
+    class SK,CH,AOI aiLayer
+    class GP,EP,SP pluginLayer
+    class GO,EO,SO opsLayer
+    class GH,ES,SN extLayer
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Chat Layer    │    │  Semantic       │    │  Plugin Layer   │
-│  (chat_sk.py)   │◄──►│  Kernel         │◄──►│  GitHub Plugin  │
-│                 │    │                 │    │  Elastic Plugin │
-│                 │    │                 │    │  ServiceNow     │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│ Azure OpenAI    │    │  Chat History   │    │  Operations     │
-│ Integration     │    │  Management     │    │  Layer          │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+
+### Data Flow Architecture
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 User
+    participant C as 🖥️ Chat Interface
+    participant K as 🧠 Semantic Kernel
+    participant P as 🔌 Plugin
+    participant O as ⚙️ Operations
+    participant A as 🌐 External API
+    
+    U->>C: "Show me open incidents"
+    C->>K: Process user message
+    K->>K: Function selection<br/>(auto-routing)
+    K->>P: ServiceNow Plugin<br/>query_open_incidents()
+    P->>O: ServiceNow Operations<br/>query_incidents()
+    O->>A: REST API Call<br/>GET /table/incident
+    A->>O: JSON Response<br/>(incidents data)
+    O->>P: Formatted results<br/>(paging info)
+    P->>K: Plugin response<br/>(user-friendly text)
+    K->>C: AI-generated response<br/>(with context)
+    C->>U: "Open Incidents - Page 1<br/>(showing 1-20)..."
 ```
 
 ### Key Architectural Patterns
@@ -91,9 +164,14 @@ The solution follows a plugin-based architecture built on Semantic Kernel:
 ### Integrations
 - **GitHub API**: Repository browsing, file content access, issue creation
 - **Elasticsearch**: Log search and analysis with KQL support
-- **ServiceNow**: Case management and support ticket operations
+- **ServiceNow REST API**: Complete incident lifecycle management
+  - Table API for incident CRUD operations
+  - Advanced querying with encoded query strings
+  - Paging support for large datasets
+  - Field-level access control and validation
 - **PyGithub**: Python wrapper for GitHub API operations
 - **Elasticsearch-py**: Official Elasticsearch Python client
+- **Requests**: HTTP client for ServiceNow REST API integration
 
 ### Infrastructure
 - **Docker Compose**: Local development environment with PostgreSQL and Adminer
@@ -143,6 +221,52 @@ Advanced log analysis capabilities with structured querying:
 }
 ```
 
+### ServiceNow Incident Management
+Comprehensive internal IT support with ServiceNow incident management system:
+
+**Incident Lifecycle Management:**
+- Create new IT incidents with detailed categorization (priority, urgency, impact)
+- Query and browse open incidents with intelligent paging (default 20 per page)
+- Search incidents by text content across descriptions and comments
+- Retrieve specific incident details by number (e.g., INC0001234) or system ID
+
+**Advanced Incident Operations:**
+- Add contextual comments and work notes to existing incidents
+- Update incident status through resolution workflow
+- Assign incidents to appropriate technical staff members
+- Close resolved incidents with proper resolution codes
+- Filter incidents by priority levels (high priority: P1/P2)
+
+**Intelligent Paging System:**
+- Automatic pagination for large incident datasets
+- Configurable page sizes (default: 20, customizable: 10, 50, 100)
+- Smart navigation with "More incidents available" guidance
+- Optimized queries using ServiceNow's REST Table API
+
+**ServiceNow Integration Features:**
+- REST API-based integration using Table API endpoints
+- Support for both username/password and API token authentication
+- Clean error handling with fallback mechanisms
+- Compatible with all ServiceNow instance versions
+
+**Supported ServiceNow Fields:**
+```json
+{
+  "number": "Incident identifier (e.g., INC0001234)",
+  "short_description": "Brief incident summary",
+  "description": "Detailed incident description", 
+  "priority": "Business priority (1=Critical, 2=High, 3=Medium, 4=Low)",
+  "urgency": "Business urgency (1=High, 2=Medium, 3=Low)",
+  "impact": "Business impact (1=High, 2=Medium, 3=Low)",
+  "state": "Incident state (1=New, 2=In Progress, 6=Resolved, 7=Closed)",
+  "assigned_to": "Assigned technician",
+  "assignment_group": "Responsible team",
+  "caller_id": "Person reporting the incident",
+  "work_notes": "Technical work notes",
+  "comments": "Customer-facing comments"
+}
+```
+
 ### Conversational AI Features
 - **Context Awareness**: Maintains conversation history and context
 - **Intelligent Routing**: Automatically selects appropriate tools based on user queries
@@ -163,7 +287,7 @@ ai-prod-support-assistant/
 │   ├── __init__.py             # Plugin exports
 │   ├── github_plugin.py        # GitHub operations plugin
 │   ├── elasticsearch_plugin.py # Elasticsearch search plugin
-│   └── servicenow_plugin.py    # ServiceNow case management plugin
+│   └── servicenow_plugin.py    # ServiceNow incident management plugin
 ├── tools/                      # LangChain tool implementations (LEGACY)
 │   ├── github_tools.py         # GitHub API tool wrappers
 │   ├── elastic_search_tools.py # Elasticsearch tool wrappers
@@ -206,24 +330,52 @@ GITHUB_PAT=ghp_your-github-personal-access-token
 ELASTICSEARCH_URL=https://your-elasticsearch-url:9200
 ELASTICSEARCH_INDEX=your-log-index-name
 
-# ServiceNow Configuration (Optional)
+# ServiceNow Configuration (for Incident Management)
 SERVICENOW_INSTANCE=your-instance.service-now.com
 SERVICENOW_USERNAME=your_username
 SERVICENOW_PASSWORD=your_password
-# OR use API token instead
+# OR use API token instead (recommended for production)
 SERVICENOW_API_TOKEN=your_api_token
 ```
 
-### GitHub PAT Permissions
+### Authentication Methods
+
+#### GitHub PAT Permissions
 Your GitHub Personal Access Token should have the following permissions:
 - `repo` (for private repository access)
 - `public_repo` (for public repository access)
 - `read:user` (for user information)
 
-### ServiceNow Authentication
-Choose one of two authentication methods:
-- **Username/Password:** Set `SERVICENOW_USERNAME` and `SERVICENOW_PASSWORD`
-- **API Token (Recommended):** Set `SERVICENOW_API_TOKEN`
+#### ServiceNow Authentication
+**Choose one of two authentication methods:**
+
+**Option 1: Username/Password**
+```bash
+SERVICENOW_USERNAME=your_username
+SERVICENOW_PASSWORD=your_password
+```
+
+**Option 2: API Token (Recommended for Production)**
+```bash
+SERVICENOW_API_TOKEN=your_api_token
+```
+
+**ServiceNow Setup Requirements:**
+- ServiceNow instance with incident table access
+- User account with appropriate roles:
+  - `incident_manager` - Full incident lifecycle management
+  - `itil` - Standard ITSM operations  
+  - `rest_api_explorer` - REST API access
+- Network access to ServiceNow instance REST endpoints
+- Optional: Custom incident forms and business rules
+
+**ServiceNow API Endpoints Used:**
+- `GET/POST /api/now/table/incident` - Incident CRUD operations
+- `PUT/PATCH /api/now/table/incident/{sys_id}` - Incident updates
+- Query parameters: `sysparm_limit`, `sysparm_offset`, `sysparm_query`, `sysparm_orderby`
+
+**ServiceNow Developer Resources:**
+- [ServiceNow Developer Portal](https://developer.servicenow.com/dev.do) - Official documentation, tutorials, and API references for ServiceNow development and integration
 
 ## 🚀 Quick Start
 
@@ -313,24 +465,67 @@ User: Create an issue in drewelewis/ContosoBankAPI titled "Database connection t
 Assistant: [Creates GitHub issue and returns the issue URL]
 ```
 
-### ServiceNow Case Management
+### ServiceNow Incident Management
 ```
-User: Create a ServiceNow case for the database timeout issue we've been seeing
-Assistant: Case created successfully!
-Case Number: CS0001234
-Sys ID: abc123def456
-Priority: 3
+User: Do I have any open incidents?
+Assistant: Open Incidents - Page 1 (showing 1-5):
 
-User: Show me all open high priority cases
-Assistant: Found 5 high priority case(s):
-- Case CS0001234: Database connection timeout
-  Priority: 1, State: Open
-- Case CS0001235: API rate limiting errors
-  Priority: 2, State: Open
-...
+- Incident INC0001234: Database connection timeout
+  Priority: 1, Urgency: 1, Impact: 2, State: 2
 
-User: Add a comment to case CS0001234 that we've identified the root cause
-Assistant: Comment added successfully to case.
+- Incident INC0001235: API rate limiting errors  
+  Priority: 2, Urgency: 2, Impact: 2, State: 1
+
+More incidents available. Use query_open_incidents with page_number='2' to continue.
+
+User: Create an incident for the new authentication service failing
+Assistant: ✅ Incident Created Successfully!
+Incident Number: INC0001236
+System ID: abc123def456ghi789
+Priority: 3 (Medium)
+
+The incident has been logged and is now in "New" status.
+
+User: Search for incidents containing ContosoBankAPI
+Assistant: Search Results for 'ContosoBankAPI' - Page 1 (showing 1-3):
+
+- Incident INC0001220: ContosoBankAPI authentication timeouts
+  Priority: 1, Urgency: 1, Impact: 2, State: 6
+  
+- Incident INC0001225: ContosoBankAPI rate limiting issues
+  Priority: 2, Urgency: 2, Impact: 2, State: 2
+
+User: Add a comment to incident INC0001234 that we've identified the root cause
+Assistant: ✅ Comment Added Successfully!
+Added comment to incident INC0001234: "Root cause identified: Database connection pool exhausted during peak load times."
+
+User: Show me high priority incidents
+Assistant: High Priority Incidents - Page 1 (showing 1-2):
+
+- Incident INC0001234: Database connection timeout
+  Priority: 1, Urgency: 1, Impact: 2, State: 2
+  
+- Incident INC0001235: API rate limiting errors
+  Priority: 2, Urgency: 2, Impact: 2, State: 1
+
+User: Resolve incident INC0001234 
+Assistant: ✅ Incident INC0001234 Resolved Successfully!
+Status updated to "Resolved" with resolution code "Solution provided"
+```
+
+### Advanced ServiceNow Operations
+```
+User: Assign incident INC0001235 to john.smith
+Assistant: ✅ Incident INC0001235 assigned successfully to john.smith
+
+User: Show me page 2 of open incidents with page size 10
+Assistant: Open Incidents - Page 2 (showing 11-20):
+[Lists next 10 incidents...]
+
+User: Close incident INC0001234 with resolution "Database connection pool tuned"
+Assistant: ✅ Incident INC0001234 closed successfully!
+Resolution: "Database connection pool tuned"
+Final State: Closed
 ```
 
 ## 🔍 Advanced Features
@@ -366,11 +561,59 @@ python tests/test_github.py
 python tests/test_elastic.py
 ```
 
-## 🔐 Security Considerations
+### Troubleshooting
 
-- **API Keys**: Store all sensitive credentials in environment variables
-- **Access Control**: Use least-privilege GitHub PATs
-- **Network Security**: Ensure Elasticsearch clusters are properly secured
+#### ServiceNow Common Issues
+
+**Connection Issues:**
+```bash
+# Test ServiceNow connection
+User: Test ServiceNow connection
+Assistant: ✅ ServiceNow Connection Test: SUCCESS
+Sample incident: INC0001234 - Database connection timeout
+Found 1 incident(s) in test query
+```
+
+**Authentication Problems:**
+- Verify `SERVICENOW_INSTANCE` URL format (without https://)
+- Check username/password or API token validity
+- Ensure user has required ServiceNow roles
+- Verify network connectivity to ServiceNow instance
+
+**API Limitations:**
+- ServiceNow instances may have API rate limits
+- Some fields may be read-only based on user permissions
+- Custom incident forms may require additional field mappings
+
+**Performance Optimization:**
+- Use paging for large incident datasets (default: 20 per page)
+- Leverage ServiceNow's encoded query syntax for complex filters
+- Consider using API tokens instead of username/password for better performance
+
+#### GitHub Integration Issues
+- Verify GitHub PAT has correct repository permissions
+- Check for API rate limiting (5000 requests/hour for authenticated users)
+- Ensure repository names and usernames are correct
+
+#### Elasticsearch Connectivity
+- Verify Elasticsearch cluster accessibility
+- Check index names and field mappings
+- Validate KQL query syntax for log searches
+
+## 🔐 Security Best Practices
+
+### ServiceNow Security
+- **Use API Tokens**: Prefer API tokens over username/password authentication
+- **Principle of Least Privilege**: Grant minimum required ServiceNow roles
+- **Network Security**: Use HTTPS for all ServiceNow API communications
+- **Credential Rotation**: Regularly rotate ServiceNow API tokens and passwords
+- **Audit Logging**: Enable ServiceNow audit logs for API access tracking
+
+### General Security Guidelines
+- **Environment Variables**: Store all sensitive credentials in `.env` files
+- **Version Control**: Never commit credentials to Git repositories  
+- **Access Control**: Use least-privilege GitHub Personal Access Tokens
+- **Network Security**: Ensure all external APIs use encrypted connections
 - **Data Privacy**: Be mindful of sensitive information in logs and repositories
 
 ## 🚦 Operational Excellence
